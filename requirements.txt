@@ -1,0 +1,6 @@
+ipykernel
+pandas
+missingno
+openpyxl
+matplotlib
+seaborn
