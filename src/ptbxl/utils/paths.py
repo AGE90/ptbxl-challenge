@@ -78,26 +78,26 @@ for dir_type in dir_types:
 
 # Example usage:
 # You can now access directories dynamically via the dir_functions dictionary
-data_dir = dir_functions['data_dir']()
-data_raw_dir = dir_functions['data_raw_dir']()
-data_processed_dir = dir_functions['data_processed_dir']()
-data_interim_dir = dir_functions['data_interim_dir']()
-data_external_dir = dir_functions['data_external_dir']()
-models_dir = dir_functions['models_dir']()
-notebooks_dir = dir_functions['notebooks_dir']()
-references_dir = dir_functions['references_dir']()
-reports_dir = dir_functions['reports_dir']()
-reports_figures_dir = dir_functions['reports_figures_dir']()
-tests_dir = dir_functions['tests_dir']()
-docs_dir = dir_functions['docs_dir']()
-logs_dir = dir_functions['logs_dir']()
-config_dir = dir_functions['config_dir']()
-scripts_dir = dir_functions['scripts_dir']()
+data_dir = dir_functions['data_dir']
+data_raw_dir = dir_functions['data_raw_dir']
+data_processed_dir = dir_functions['data_processed_dir']
+data_interim_dir = dir_functions['data_interim_dir']
+data_external_dir = dir_functions['data_external_dir']
+models_dir = dir_functions['models_dir']
+notebooks_dir = dir_functions['notebooks_dir']
+references_dir = dir_functions['references_dir']
+reports_dir = dir_functions['reports_dir']
+reports_figures_dir = dir_functions['reports_figures_dir']
+tests_dir = dir_functions['tests_dir']
+docs_dir = dir_functions['docs_dir']
+logs_dir = dir_functions['logs_dir']
+config_dir = dir_functions['config_dir']
+scripts_dir = dir_functions['scripts_dir']
 
 # # Example print statements to show directory paths
-# print(f"Data Directory: {data_dir}")
-# print(f"Raw Data Directory: {data_raw_dir}")
-# print(f"Processed Data Directory: {data_processed_dir}")
-# print(f"Models Directory: {models_dir}")
-# print(f"Source Code Directory: {src_dir}")
-# print(f"Scripts Directory: {scripts_dir}")
+# print(f"Data Directory: {data_dir()}")
+# print(f"Raw Data Directory: {data_raw_dir()}")
+# print(f"Processed Data Directory: {data_processed_dir()}")
+# print(f"Models Directory: {models_dir()}")
+# print(f"Source Code Directory: {src_dir()}")
+# print(f"Scripts Directory: {scripts_dir()}")
