@@ -6,13 +6,15 @@ class SignalPreprocessing:
     """
     A class for preprocessing ECG signals    
     """
-    def mean_removal(self, ecg: np.ndarray) -> np.ndarray:
+    def mean_removal(self, ecg: np.ndarray, axis: int = 1) -> np.ndarray:
         """Mean removal
 
         Parameters
         ----------
         ecg : np.ndarray
             Electrocardiograms array
+        axis : int, optional
+            Axis along which the mean is computed
 
         Returns
         -------
@@ -20,7 +22,7 @@ class SignalPreprocessing:
             Transformed electrocardiograms array
         """
 
-        ecg = np.transpose(ecg, (1, 0, 2)) - ecg.mean(axis=1)
+        ecg = np.transpose(ecg, (1, 0, 2)) - ecg.mean(axis=axis)
         ecg = np.transpose(ecg, (1, 0, 2))
 
         return ecg
@@ -31,6 +33,7 @@ class SignalPreprocessing:
         fs: float,
         fc: float = 0.5,
         order: int = 4,
+        axis: int = 1,
     ) -> np.ndarray:
         """Wander removal
 
@@ -44,6 +47,8 @@ class SignalPreprocessing:
             Cutoff frequency, by default 0.5 Hz
         order : int, optional
             High-pass butterworth filter order, by default 4
+        axis : int, optional
+            Axis along which the filtering is applyed
 
         Returns
         -------
@@ -52,12 +57,10 @@ class SignalPreprocessing:
         """
 
         # Define the high-pass filter
-        fc = 0.5  # Cutoff frequency
-        order = 4  # Filter order
-        b, a = signal.butter(order, fc/(fs/2), "highpass")
+        b, a = signal.butter(order/2, fc/(fs/2), "highpass")
 
         # Apply the filter to remove baseline wander
-        filtered_ecg = signal.filtfilt(b, a, ecg, axis=1)
+        filtered_ecg = signal.filtfilt(b, a, ecg, axis=axis)
 
         return filtered_ecg
 
@@ -85,7 +88,8 @@ class SignalPreprocessing:
         fs: float,
         fc_low: float = 5,
         fc_high: float = 12,
-        order: int = 4
+        order: int = 4,
+        axis: int = 1,
     ) -> np.ndarray:
         """Band-pass
 
@@ -101,6 +105,8 @@ class SignalPreprocessing:
             Cutoff frequency for the high pass, by default 12 Hz
         order : int, optional
             Band-pass butterworth filter order, by default 4, by default 4
+        axis : int, optional
+            Axis along which the filtering is applyed
 
         Returns
         -------
@@ -109,18 +115,20 @@ class SignalPreprocessing:
         """
 
         b, a = signal.butter(
-            order, [fc_low/(fs/2), fc_high/(fs/2)], "bandpass")
-        ecg = signal.filtfilt(b, a, ecg, axis=1)
+            order / 2, [fc_low/(fs/2), fc_high/(fs/2)], "bandpass")
+        ecg = signal.filtfilt(b, a, ecg, axis=axis)
 
         return ecg
 
-    def derivative_filtering(self, ecg: np.ndarray) -> np.ndarray:
+    def derivative_filtering(self, ecg: np.ndarray, axis: int = 1) -> np.ndarray:
         """Compute the first derivative
 
         Parameters
         ----------
         ecg : np.ndarray
             Electrocardiograms array
+        axis : int, optional
+            Axis along which the derivative filtering is applyed
 
         Returns
         -------
@@ -128,7 +136,7 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        return np.gradient(ecg, axis=1)
+        return np.gradient(ecg, axis=axis)
 
     def squaring(self, ecg: np.ndarray) -> np.ndarray:
         """Square the signal
@@ -171,7 +179,7 @@ class SignalPreprocessing:
 
         return ecg_smooth
 
-    def pan_tompkins(self, ecg: np.ndarray, fs: float, w: float) -> np.ndarray:
+    def pan_tompkins(self, ecg: np.ndarray, fs: float, w: float, axis: int = 1) -> np.ndarray:
         """Pan–Tompkins algorithm
 
         Parameters
@@ -189,14 +197,14 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        ecg = self.band_pass_filtering(ecg=ecg, fs=fs)
-        ecg = self.derivative_filtering(ecg=ecg)
+        ecg = self.band_pass_filtering(ecg=ecg, fs=fs, axis=axis)
+        ecg = self.derivative_filtering(ecg=ecg, axis=axis)
         ecg = self.squaring(ecg=ecg)
         ecg = self.smooth_signals(ecg=ecg, w=w)
 
         return ecg
 
-    def normalize(self, ecg: np.ndarray) -> np.ndarray:
+    def normalize(self, ecg: np.ndarray, axis: int = 1) -> np.ndarray:
         """Normalize signals between [-1, 1]
 
         Parameters
@@ -210,8 +218,8 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        a = np.transpose(ecg, (1, 0, 2)) - np.min(ecg, axis=1)
-        b = np.max(ecg, axis=1) - np.min(ecg, axis=1)
+        a = np.transpose(ecg, (1, 0, 2)) - np.min(ecg, axis=axis)
+        b = np.max(ecg, axis=axis) - np.min(ecg, axis=axis)
 
         out = np.ones(np.transpose(ecg, (1, 0, 2)).shape)
         ecg = np.divide(a, b, out=out, where=b != 0)
