@@ -57,7 +57,7 @@ class SignalPreprocessing:
         """
 
         # Define the high-pass filter
-        b, a = signal.butter(order/2, fc/(fs/2), "highpass")
+        b, a = signal.butter(order/2, fc/(fs/2), 'highpass')
 
         # Apply the filter to remove baseline wander
         filtered_ecg = signal.filtfilt(b, a, ecg, axis=axis)
@@ -80,7 +80,7 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        return np.convolve(x, np.ones(w), "same") / w
+        return np.convolve(x, np.ones(w), 'same') / w
 
     def band_pass_filtering(
         self,
@@ -115,7 +115,7 @@ class SignalPreprocessing:
         """
 
         b, a = signal.butter(
-            order / 2, [fc_low/(fs/2), fc_high/(fs/2)], "bandpass")
+            order / 2, [fc_low/(fs/2), fc_high/(fs/2)], 'bandpass')
         ecg = signal.filtfilt(b, a, ecg, axis=axis)
 
         return ecg

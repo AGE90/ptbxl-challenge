@@ -46,26 +46,26 @@ def make_dir_function(dir_name: Union[str, Iterable[str]]) -> Callable[..., Path
     return dir_path
 
 # Create the project directory function
-project_dir = make_dir_function("")
+project_dir = make_dir_function('')
 
 # Define a comprehensive list of directory types
 dir_types: List[List[str]] = [
-    ["app"],                    # API functionalities
-    ["data"],                   # Base data folder
-    ["data", "raw"],            # Raw data folder
-    ["data", "processed"],      # Processed data folder
-    ["data", "interim"],        # Interim data folder
-    ["data", "external"],       # External data folder (e.g., third-party sources)
-    ["models"],                 # Folder to store models
-    ["notebooks"],              # Jupyter notebooks folder
-    ["references"],             # Reference materials
-    ["reports"],                # Reports folder
-    ["reports", "figures"],     # Figures for reports
-    ["tests"],                  # Unit test files
-    ["docs"],                   # Documentation files
-    ["logs"],                   # Log files for running experiments or monitoring
-    ["config"],                 # Configuration files (e.g., YAML, JSON)
-    ["scripts"],                # Standalone scripts (e.g., bash scripts, batch jobs)
+    ['app'],                    # API functionalities
+    ['data'],                   # Base data folder
+    ['data', 'raw'],            # Raw data folder
+    ['data', 'processed'],      # Processed data folder
+    ['data', 'interim'],        # Interim data folder
+    ['data', 'external'],       # External data folder (e.g., third-party sources)
+    ['models'],                 # Folder to store models
+    ['notebooks'],              # Jupyter notebooks folder
+    ['references'],             # Reference materials
+    ['reports'],                # Reports folder
+    ['reports', 'figures'],     # Figures for reports
+    ['tests'],                  # Unit test files
+    ['docs'],                   # Documentation files
+    ['logs'],                   # Log files for running experiments or monitoring
+    ['config'],                 # Configuration files (e.g., YAML, JSON)
+    ['scripts'],                # Standalone scripts (e.g., bash scripts, batch jobs)
 ]
 
 # Use a dictionary to store dynamically created directory functions
@@ -73,7 +73,7 @@ dir_functions: Dict[str, Callable[..., Path]] = {}
 
 # Dynamically create directory functions and store them in the dictionary
 for dir_type in dir_types:
-    dir_var_name = '_'.join(dir_type) + "_dir"  # Create variable name like 'data_raw_dir'
+    dir_var_name = '_'.join(dir_type) + '_dir'  # Create variable name like 'data_raw_dir'
     dir_functions[dir_var_name] = make_dir_function(dir_type)
 
 # Example usage:
@@ -95,9 +95,9 @@ config_dir = dir_functions['config_dir']
 scripts_dir = dir_functions['scripts_dir']
 
 # # Example print statements to show directory paths
-# print(f"Data Directory: {data_dir()}")
-# print(f"Raw Data Directory: {data_raw_dir()}")
-# print(f"Processed Data Directory: {data_processed_dir()}")
-# print(f"Models Directory: {models_dir()}")
-# print(f"Source Code Directory: {src_dir()}")
-# print(f"Scripts Directory: {scripts_dir()}")
+# print(f'Data Directory: {data_dir()}')
+# print(f'Raw Data Directory: {data_raw_dir()}')
+# print(f'Processed Data Directory: {data_processed_dir()}')
+# print(f'Models Directory: {models_dir()}')
+# print(f'Source Code Directory: {src_dir()}')
+# print(f'Scripts Directory: {scripts_dir()}')

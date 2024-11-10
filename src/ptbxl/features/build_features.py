@@ -1,9 +1,11 @@
 import numpy as np
-import pandas as pd
 from scipy import signal
 
 
 class BuildFeatures:
+    """
+    Class to build features from a signal
+    """
 
     def dominant_frequency(
         self,
@@ -46,7 +48,7 @@ class BuildFeatures:
             freqs, Pxx = signal.welch(x, fs, nperseg=nperseg, axis=axis)
         else:
             raise ValueError(f'Invalid method: {method}')
-        
+
         # print(f'freqs {freqs.shape}')
         # print(f'Pxx {Pxx.shape}')
 

@@ -15,8 +15,8 @@ def load_raw_data(df: pd.DataFrame, sampling_rate: float, path: Path) -> np.ndar
     df : pd.DataFrame
         A DataFrame containing metadata, including filenames for low-resolution or 
         high-resolution signal files.
-        It is expected to have a column "filename_lr" for low-resolution data and 
-        "filename_hr" for high-resolution data.
+        It is expected to have a column 'filename_lr' for low-resolution data and 
+        'filename_hr' for high-resolution data.
     sampling_rate : float
         The sampling rate of the signals to load. If the sampling rate is 100, 
         the low-resolution files are loaded; otherwise, the high-resolution 
@@ -34,8 +34,8 @@ def load_raw_data(df: pd.DataFrame, sampling_rate: float, path: Path) -> np.ndar
     """
     
     if sampling_rate == 100:
-        data = [wfdb.rdsamp(path / f) for f in df["filename_lr"]]
+        data = [wfdb.rdsamp(path / f) for f in df['filename_lr']]
     else:
-        data = [wfdb.rdsamp(path / f) for f in df["filename_hr"]]
+        data = [wfdb.rdsamp(path / f) for f in df['filename_hr']]
     data = np.array([signal for signal, meta in data])
     return data
