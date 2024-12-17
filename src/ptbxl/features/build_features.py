@@ -188,9 +188,9 @@ class BuildFeatures:
         # Loop through approximation and detail coefficients
         for i, coeff in enumerate(coeffs):
             level_features = {
-                f'level_{i+1}_energy': np.sum(coeff ** 2, axis=axis),  # Energy along the decomposition axis
-                f'level_{i+1}_mean': np.mean(coeff, axis=axis),        # Mean along the decomposition axis
-                f'level_{i+1}_std': np.std(coeff, axis=axis),          # Standard deviation along the decomposition axis
+                f'l{i+1}nrg': np.sum(coeff ** 2, axis=axis),  # Energy along the decomposition axis
+                f'l{i+1}mean': np.mean(coeff, axis=axis),        # Mean along the decomposition axis
+                f'l{i+1}std': np.std(coeff, axis=axis),          # Standard deviation along the decomposition axis
             }
             features.append(level_features)
 
