@@ -66,6 +66,7 @@ dir_types: List[List[str]] = [
     ['logs'],                   # Log files for running experiments or monitoring
     ['config'],                 # Configuration files (e.g., YAML, JSON)
     ['scripts'],                # Standalone scripts (e.g., bash scripts, batch jobs)
+    ['tracking'],               # Tracking data for experiments or monitoring
 ]
 
 # Use a dictionary to store dynamically created directory functions
@@ -93,6 +94,7 @@ docs_dir = dir_functions['docs_dir']
 logs_dir = dir_functions['logs_dir']
 config_dir = dir_functions['config_dir']
 scripts_dir = dir_functions['scripts_dir']
+tracking_dir = dir_functions['tracking_dir']
 
 # # Example print statements to show directory paths
 # print(f'Data Directory: {data_dir()}')
