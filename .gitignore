@@ -167,3 +167,4 @@ cython_debug/
 
 # Project folders
 data/raw/physionet.org/
+tracking/
