@@ -1,133 +1,113 @@
+import io
 import logging
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
+import seaborn as sns
+from mlflow.models.signature import infer_signature
 from sklearn.base import BaseEstimator
 from sklearn.metrics import (ConfusionMatrixDisplay, confusion_matrix,
                              f1_score, precision_score, recall_score,
                              roc_auc_score)
 
+from ptbxl.utils.paths import reports_dir, tracking_dir
+
+sns.set_theme()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+@contextmanager
+def change_working_dir(new_dir):
+    """
+    Temporarily changes the working directory.
+    """
+    original_dir = os.getcwd()
+    try:
+        os.chdir(new_dir)
+        yield
+    finally:
+        os.chdir(original_dir)
+
+
+def log_confusion_matrix(y_test, y_pred, labels):
+    """
+    Log a confusion matrix directly to MLflow without saving it locally.
+
+    Parameters:
+    -----------
+    y_test : array-like
+        Ground truth labels.
+    y_pred : array-like
+        Predicted labels.
+    labels : list
+        List of label names for the confusion matrix.
+
+    Returns:
+    --------
+    None
+    """
+    # Create confusion matrix plot
+    cm_display = ConfusionMatrixDisplay.from_predictions(
+        y_test,
+        y_pred,
+        display_labels=labels,
+        cmap="Blues"
+    )
+
+    # Use an in-memory bytes buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    buf.seek(0)  # Move to the beginning of the buffer
+
+    # Log the confusion matrix as an artifact
+    mlflow.log_artifact(buf, artifact_path="confusion_matrix.png")
+
+    # Close the buffer and the plot
+    buf.close()
+    plt.close()
+
+
 class ExperimentTracking:
-    
-    def __init__(self, tracking_dir: Path):
-        
-        
+    """
+    This class provides methods for tracking and logging experiment details, including model 
+    performance and artifacts.
+    """
+
+    def __init__(self):
+
+        # Initialize tracking URI and artifact root
         self.backend = "sqlite"
-        self.store_uri = f"{self.backend}:////{str(tracking_dir('mlflow.db')).replace(os.sep, '/')}"
+        store_path = Path(tracking_dir("mlflow.db"))
+        artifacts_dir = Path(tracking_dir("mlruns"))
+
+        # Ensure that artifacts path exist
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+
+        # Set the MLflow tracking URI and artifacts location
+        self.store_uri = f"{self.backend}:///{store_path.as_posix()}"
+        self.artifacts_location = artifacts_dir.as_uri()
+
+        # Set the MLflow tracking URI
         mlflow.set_tracking_uri(self.store_uri)
-        
-        # Specify artifacts location
-        self.artifacts_root = f"file:///{str(tracking_dir('artifacts')).replace(os.sep, '/')}"
-        
-        print("Open the MLflow UI by running the following command into your terminal, and navigate to the URL:")
-        print(f"mlflow ui --backend-store-uri {mlflow.get_tracking_uri()}")
-        
-        
-    def track_experiment(
-        self,
-        experiment_name: str,
-        run_name: str,
-        model_name: str,
-        developer: str,
-        model: BaseEstimator,
-        X_train: np.ndarray,
-        y_train: np.ndarray,
-        X_test: np.ndarray,
-        y_test: np.ndarray,
-    ):
-        
-        
-        
-        y_pred = model.predict(X_test)
-        
-        # Evaluate
-        precision = np.round(precision_score(y_test, y_pred), 2)
-        recall = np.round(recall_score(y_test, y_pred), 2)
-        f1 = np.round(f1_score(y_test, y_pred), 2)
-        roc_auc = np.round(roc_auc_score(y_test, y_pred), 2)
-        
-        logger.info(f"Precision: {precision}")
-        logger.info(f"Recall: {recall}")
-        logger.info(f"F1: {f1}")
-        logger.info(f"ROC AUC: {roc_auc}")
-        
-        mlflow.create_experiment(
-            name=experiment_name,
-            artifact_location=self.artifacts_root,
-        )
-        
-        # Create an experiment
-        experiment = mlflow.set_experiment(
-            experiment_name=experiment_name,   
-        )
-        
-        
-        # Start an MLflow run
-        with mlflow.start_run(run_name=run_name):
+        # mlflow.set_artifact_uri(self.artifacts_location) # No available
 
-            # Log the model
-            mlflow.log_param("model_name", model_name)
-            mlflow.log_param("developer", developer)
-            
-            mlflow.log_metric("precision", precision)
-            mlflow.log_metric("recall", recall)
-            mlflow.log_metric("f1", f1)
-            mlflow.log_metric("roc_auc", roc_auc)
-            # Log the confusion matrix
-            mlflow.log_metric("confusion_matrix", confusion_matrix(y_test, y_pred))
-            # Log the model
-            mlflow.sklearn.log_model(
-                model,
-                f"model_{model_name}",
-                
-                
-            )
-            
+        # # Set the tracking URI and artifact location globally
+        # os.environ["MLFLOW_TRACKING_URI"] = self.store_uri
+        # os.environ["MLFLOW_ARTIFACT_URI"] = self.artifacts_location
 
-# ####
-# import numpy as np
-# import logging
-# import os
-# import mlflow
-# from pathlib import Path
-# from sklearn.base import BaseEstimator
-# from sklearn.metrics import (
-#     ConfusionMatrixDisplay,
-#     confusion_matrix,
-#     f1_score,
-#     precision_score,
-#     recall_score,
-#     roc_auc_score,
-# )
-
-
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger(__name__)
-
-
-class ExperimentTracking2:
-    def __init__(self, tracking_dir: Path):
-        # Ensure directory exists
-        tracking_dir.mkdir(parents=True, exist_ok=True)
-
-        self.backend = "sqlite"
-        self.store_uri = f"{self.backend}:////{str(tracking_dir('mlflow.db')).replace(os.sep, '/')}"
-        mlflow.set_tracking_uri(self.store_uri)
-
-        # Specify artifacts location
-        self.artifacts_root = f"file:///{str(tracking_dir('artifacts')).replace(os.sep, '/')}"
-        (tracking_dir / 'artifacts').mkdir(parents=True, exist_ok=True)
-
+        logger.info("MLflow tracking URI: %s", self.store_uri)
+        logger.info("MLflow artifacts root: %s", self.artifacts_location)
         logger.info(
-            "Open the MLflow UI by running the following command into your terminal, and navigate to the URL:"
+            "Open the MLflow UI by running the following command:\n"
+            "mlflow ui --backend-store-uri %s",
+            mlflow.get_tracking_uri(),
         )
-        logger.info(f"mlflow ui --backend-store-uri {mlflow.get_tracking_uri()}")
 
     def track_experiment(
         self,
@@ -140,61 +120,117 @@ class ExperimentTracking2:
         y_train: np.ndarray,
         X_test: np.ndarray,
         y_test: np.ndarray,
-        custom_metrics: dict = None,
+        labels: list,
+        xgb: bool = False
     ):
+        """
+        Tracks an experiment in MLflow by logging parameters, metrics, and artifacts.
+
+        Parameters
+        ----------
+        experiment_name : str
+            The name of the experiment.
+        run_name : str
+            The name of the run.
+        model_name : str
+            The name of the model being tracked.
+        developer : str
+            The developer's name.
+        model : BaseEstimator
+            The machine learning model to track.
+        X_train : np.ndarray
+            Training feature set.
+        y_train : np.ndarray
+            Training target set.
+        X_test : np.ndarray
+            Test feature set.
+        y_test : np.ndarray
+            Test target set.
+        """
+
+        # Predict and evaluate
+        y_pred = model.predict(X_test)
+        if hasattr(model, "predict_proba"):
+            y_proba = model.predict_proba(X_test)
+        else:
+            y_proba = None
+
+        # Metrics
+        precision = np.round(precision_score(
+            y_test, y_pred, average="weighted"), 2)
+        recall = np.round(recall_score(
+            y_test, y_pred, average="weighted"), 2)
+        f1 = np.round(f1_score(y_test, y_pred, average="weighted"), 2)
+        if y_proba is not None and len(np.unique(y_test)) > 2:
+            roc_auc = np.round(roc_auc_score(
+                y_test, y_proba, multi_class="ovr"), 2)
+        elif y_proba is not None:
+            roc_auc = np.round(roc_auc_score(y_test, y_proba[:, 1]), 2)
+        else:
+            roc_auc = None
+
+        logger.info("Precision: %s", precision)
+        logger.info("Recall: %s", recall)
+        logger.info("F1: %s", f1)
+        if roc_auc is not None:
+            logger.info("ROC AUC: %s", roc_auc)
+
+        # Model signature
+        signature = infer_signature(X_train, model.predict(X_train))
+
         try:
-            # Predict
-            y_pred = model.predict(X_test)
+            # Temporarily change working directory
+            with change_working_dir(str(Path(tracking_dir("mlruns")).parent)):
 
-            # Handle multi-class or binary classification for roc_auc
-            if len(np.unique(y_test)) > 2:
-                roc_auc = np.round(roc_auc_score(y_test, model.predict_proba(X_test), multi_class="ovr"), 2)
-            else:
-                roc_auc = np.round(roc_auc_score(y_test, y_pred), 2)
+                # Ensure experiment exists
+                experiment = mlflow.get_experiment_by_name(experiment_name)
+                if experiment is None:
+                    # Create experiment with explicit artifact location
+                    mlflow.create_experiment(
+                        name=experiment_name,
+                        artifact_location=self.artifacts_location
+                    )
 
-            # Evaluate
-            precision = np.round(precision_score(y_test, y_pred, average="weighted"), 2)
-            recall = np.round(recall_score(y_test, y_pred, average="weighted"), 2)
-            f1 = np.round(f1_score(y_test, y_pred, average="weighted"), 2)
+                # Set experiment
+                mlflow.set_experiment(experiment_name)
 
-            logger.info(f"Precision: {precision}")
-            logger.info(f"Recall: {recall}")
-            logger.info(f"F1: {f1}")
-            logger.info(f"ROC AUC: {roc_auc}")
+                # Log experiment details
+                with mlflow.start_run(run_name=run_name):
+                    mlflow.log_param("model_name", model_name)
+                    mlflow.log_param("developer", developer)
 
-            # Log experiment
-            mlflow.set_experiment(experiment_name=experiment_name)
+                    # Log hyperparameters if available
+                    if hasattr(model, "get_params"):
+                        mlflow.log_params(model.get_params())
 
-            with mlflow.start_run(run_name=run_name):
-                # Log parameters
-                mlflow.log_param("model_name", model_name)
-                mlflow.log_param("developer", developer)
-                if hasattr(model, "get_params"):
-                    mlflow.log_params(model.get_params())
+                    # Log metrics
+                    mlflow.log_metric("precision", precision)
+                    mlflow.log_metric("recall", recall)
+                    mlflow.log_metric("f1", f1)
+                    if roc_auc is not None:
+                        mlflow.log_metric("roc_auc", roc_auc)
 
-                # Log metrics
-                mlflow.log_metric("precision", precision)
-                mlflow.log_metric("recall", recall)
-                mlflow.log_metric("f1", f1)
-                mlflow.log_metric("roc_auc", roc_auc)
+                    # Log confusion matrix directly
+                    log_confusion_matrix(y_test, y_pred, labels=labels)
 
-                # Log confusion matrix as artifact
-                cm = confusion_matrix(y_test, y_pred)
-                cm_display = ConfusionMatrixDisplay(confusion_matrix=cm)
-                fig, ax = plt.subplots(figsize=(8, 8))
-                cm_display.plot(ax=ax)
-                cm_artifact_path = Path(self.artifacts_root) / f"{run_name}_confusion_matrix.png"
-                plt.savefig(cm_artifact_path)
-                plt.close(fig)
-                mlflow.log_artifact(str(cm_artifact_path), artifact_path="confusion_matrix")
+                    # Log confusion matrix as artifact
+                    # mlflow.log_artifact(str(reports_path), artifact_path="confusion_matrix")
 
-                # Log custom metrics if provided
-                if custom_metrics:
-                    for metric_name, metric_value in custom_metrics.items():
-                        mlflow.log_metric(metric_name, metric_value)
-
-                # Log the model
-                mlflow.sklearn.log_model(model, artifact_path=f"model_{model_name}")
+                    # if xgb:
+                    #     mlflow.xgboost.log_model(
+                    #         model,
+                    #         artifact_path=f"model_{model_name}",
+                    #         signature=signature,
+                    #         model_format="pkl"
+                    #     )
+                    # else:
+                    #     # Log model with signature
+                    #     mlflow.sklearn.log_model(
+                    #         model,
+                    #         artifact_path=f"model_{model_name}",
+                    #         signature=signature,
+                    #     )
 
         except Exception as e:
-            logger.error(f"An error occurred during experiment tracking: {e}", exc_info=True)
+            logger.error(
+                "An error occurred during experiment tracking %s", e, exc_info=True)
