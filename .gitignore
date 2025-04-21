@@ -165,6 +165,7 @@ cython_debug/
 # Project files
 *.csv
 *.db
+*.parquet
 
 # Project folders
 data/raw/physionet.org/
