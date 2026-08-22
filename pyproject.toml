@@ -7,15 +7,13 @@ name = "ptbxl"
 version = "0.1.0"
 description = "A short description of the project."
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {text = "No license file"}
 authors = [
     {name = "AGE90", email = "alejandrogomezechavarria@gmail.com"}
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -24,7 +22,20 @@ classifiers = [
 ]
 dependencies = [
     "pyprojroot",
-    "pathlib",
+    "numpy",
+    "pandas",
+    "scipy",
+    "wfdb",
+    "pywavelets",
+    "mlflow",
+    "matplotlib",
+    "seaborn",
+    "scikit-learn",
+    "tqdm",
+    "missingno",
+    "openpyxl",
+    "ipykernel",
+    "xgboost",
 ]
 
 [project.optional-dependencies]
@@ -32,7 +43,7 @@ dev = [
     "pytest>=6.0",
     "pytest-cov",
     "mypy",
-    "flake8",
+    "ruff",
     "black",
 ]
 
@@ -53,6 +64,16 @@ addopts = "--cov=src"
 testpaths = [
     "tests",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+# Match flake8's old scope (pyflakes + pycodestyle) rather than ruff's much
+# broader default rule set, so this is a straight tool swap, not a repo-wide
+# style overhaul.
+select = ["E", "F", "W"]
 
 [tool.mypy]
 mypy_path = "src"

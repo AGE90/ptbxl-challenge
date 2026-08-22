@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import signal
+from scipy import ndimage
 
 
 class SignalPreprocessing:
@@ -22,10 +23,7 @@ class SignalPreprocessing:
             Transformed electrocardiograms array
         """
 
-        ecg = np.transpose(ecg, (1, 0, 2)) - ecg.mean(axis=axis)
-        ecg = np.transpose(ecg, (1, 0, 2))
-
-        return ecg
+        return ecg - np.mean(ecg, axis=axis, keepdims=True)
 
     def wander_removal(
         self,
@@ -56,6 +54,11 @@ class SignalPreprocessing:
              Filtered electrocardiograms array
         """
 
+        if order % 2 != 0:
+            raise ValueError(
+                f"order must be even (filtfilt doubles the effective order); got {order}"
+            )
+
         # Define the high-pass filter
         b, a = signal.butter(order/2, fc/(fs/2), 'highpass')
 
@@ -63,24 +66,6 @@ class SignalPreprocessing:
         filtered_ecg = signal.filtfilt(b, a, ecg, axis=axis)
 
         return filtered_ecg
-
-    def moving_window_integration(self, x: np.ndarray, w: int) -> np.ndarray:
-        """Moving window integration
-
-        Parameters
-        ----------
-        x : np.ndarray
-            Single electrocardiogram array
-        w : int
-            Sliding window length
-
-        Returns
-        -------
-        np.ndarray
-            Transformed electrocardiogram array
-        """
-
-        return np.convolve(x, np.ones(w), 'same') / w
 
     def band_pass_filtering(
         self,
@@ -113,6 +98,11 @@ class SignalPreprocessing:
         np.ndarray
             Filtered electrocardiograms array
         """
+
+        if order % 2 != 0:
+            raise ValueError(
+                f"order must be even (filtfilt doubles the effective order); got {order}"
+            )
 
         b, a = signal.butter(
             order / 2, [fc_low/(fs/2), fc_high/(fs/2)], 'bandpass')
@@ -154,15 +144,17 @@ class SignalPreprocessing:
 
         return np.square(ecg)
 
-    def smooth_signals(self, ecg: np.ndarray,  w: float) -> np.ndarray:
+    def smooth_signals(self, ecg: np.ndarray, w: int, axis: int = 1) -> np.ndarray:
         """Apply moving-average to smooth the signal
 
         Parameters
         ----------
         ecg : np.ndarray
             Electrocardiograms array
-        w : float
+        w : int
             Moving average window size
+        axis : int, optional
+            Axis along which the smoothing is applied, by default 1
 
         Returns
         -------
@@ -170,16 +162,9 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        m, n, lead = ecg.shape
-        ecg_smooth = np.zeros((m, n, lead))
-        for i in range(m):
-            for j in range(lead):
-                ecg_smooth[i, :, j] = self.moving_window_integration(
-                    ecg[i, :, j], w)
+        return ndimage.uniform_filter1d(ecg, size=w, axis=axis, mode='nearest')
 
-        return ecg_smooth
-
-    def pan_tompkins(self, ecg: np.ndarray, fs: float, w: float, axis: int = 1) -> np.ndarray:
+    def pan_tompkins(self, ecg: np.ndarray, fs: float, w: int, axis: int = 1) -> np.ndarray:
         """Pan–Tompkins algorithm
 
         Parameters
@@ -188,7 +173,7 @@ class SignalPreprocessing:
            Electrocardiograms array
         fs : float
             Sampling frequency (Hz)
-        w : float
+        w : int
             Moving average window size
 
         Returns
@@ -200,7 +185,7 @@ class SignalPreprocessing:
         ecg = self.band_pass_filtering(ecg=ecg, fs=fs, axis=axis)
         ecg = self.derivative_filtering(ecg=ecg, axis=axis)
         ecg = self.squaring(ecg=ecg)
-        ecg = self.smooth_signals(ecg=ecg, w=w)
+        ecg = self.smooth_signals(ecg=ecg, w=w, axis=axis)
 
         return ecg
 
@@ -218,11 +203,12 @@ class SignalPreprocessing:
             Transformed electrocardiogram array
         """
 
-        a = np.transpose(ecg, (1, 0, 2)) - np.min(ecg, axis=axis)
-        b = np.max(ecg, axis=axis) - np.min(ecg, axis=axis)
+        lo = np.min(ecg, axis=axis, keepdims=True)
+        hi = np.max(ecg, axis=axis, keepdims=True)
+        span = hi - lo
 
-        out = np.ones(np.transpose(ecg, (1, 0, 2)).shape)
-        ecg = np.divide(a, b, out=out, where=b != 0)
-        ecg = 2 * np.transpose(ecg, (1, 0, 2)) - 1
+        out = np.ones(ecg.shape)
+        ecg = np.divide(ecg - lo, span, out=out, where=span != 0)
+        ecg = 2 * ecg - 1
 
         return ecg

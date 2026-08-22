@@ -136,10 +136,10 @@ class BuildFeatures:
         
         # Compute the probability distribution of the PSD
         out = np.ones(Pxx.shape)
-        sumpxx = np.sum(Pxx)
+        sumpxx = np.sum(Pxx, axis=axis, keepdims=True)
         psd_normalized = np.divide(
             Pxx,
-            np.sum(Pxx, axis=axis, keepdims=True),
+            sumpxx,
             out=out,
             where=(sumpxx != 0),
         )
@@ -151,7 +151,7 @@ class BuildFeatures:
         
         return entropy
     
-    def wavelet_fetures(
+    def wavelet_features(
         self,
         x: np.ndarray,
         wavelet: str = 'db4',

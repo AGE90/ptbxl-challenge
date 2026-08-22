@@ -1,4 +1,3 @@
-import io
 import logging
 import os
 from contextlib import contextmanager
@@ -10,15 +9,12 @@ import numpy as np
 import seaborn as sns
 from mlflow.models.signature import infer_signature
 from sklearn.base import BaseEstimator
-from sklearn.metrics import (ConfusionMatrixDisplay, confusion_matrix,
+from sklearn.metrics import (ConfusionMatrixDisplay,
                              f1_score, precision_score, recall_score,
                              roc_auc_score)
 
-from ptbxl.utils.paths import reports_dir, tracking_dir
+from ptbxl.utils.paths import tracking_dir
 
-sns.set_theme()
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -52,6 +48,8 @@ def log_confusion_matrix(y_test, y_pred, labels):
     --------
     None
     """
+    sns.set_theme()
+
     # Create confusion matrix plot
     cm_display = ConfusionMatrixDisplay.from_predictions(
         y_test,
@@ -60,17 +58,10 @@ def log_confusion_matrix(y_test, y_pred, labels):
         cmap="Blues"
     )
 
-    # Use an in-memory bytes buffer
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png', bbox_inches='tight')
-    buf.seek(0)  # Move to the beginning of the buffer
+    # Log the figure directly - no temp file or in-memory buffer needed
+    mlflow.log_figure(cm_display.figure_, "confusion_matrix.png")
 
-    # Log the confusion matrix as an artifact
-    mlflow.log_artifact(buf, artifact_path="confusion_matrix.png")
-
-    # Close the buffer and the plot
-    buf.close()
-    plt.close()
+    plt.close(cm_display.figure_)
 
 
 class ExperimentTracking:
@@ -213,24 +204,21 @@ class ExperimentTracking:
                     # Log confusion matrix directly
                     log_confusion_matrix(y_test, y_pred, labels=labels)
 
-                    # Log confusion matrix as artifact
-                    # mlflow.log_artifact(str(reports_path), artifact_path="confusion_matrix")
-
-                    # if xgb:
-                    #     mlflow.xgboost.log_model(
-                    #         model,
-                    #         artifact_path=f"model_{model_name}",
-                    #         signature=signature,
-                    #         model_format="pkl"
-                    #     )
-                    # else:
-                    #     # Log model with signature
-                    #     mlflow.sklearn.log_model(
-                    #         model,
-                    #         artifact_path=f"model_{model_name}",
-                    #         signature=signature,
-                    #     )
+                    # Log the model with its signature
+                    if xgb:
+                        mlflow.xgboost.log_model(
+                            model,
+                            artifact_path=f"model_{model_name}",
+                            signature=signature,
+                            model_format="pkl"
+                        )
+                    else:
+                        mlflow.sklearn.log_model(
+                            model,
+                            artifact_path=f"model_{model_name}",
+                            signature=signature,
+                        )
 
         except Exception as e:
-            logger.error(
-                "An error occurred during experiment tracking %s", e, exc_info=True)
+            logger.exception(
+                "An error occurred during experiment tracking %s", e)

@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import wfdb
+from tqdm import tqdm
 
 
 def load_raw_data(df: pd.DataFrame, sampling_rate: float, path: Path) -> np.ndarray:
@@ -33,9 +34,14 @@ def load_raw_data(df: pd.DataFrame, sampling_rate: float, path: Path) -> np.ndar
         based on the sampling rate.
     """
     
-    if sampling_rate == 100:
-        data = [wfdb.rdsamp(path / f) for f in df['filename_lr']]
-    else:
-        data = [wfdb.rdsamp(path / f) for f in df['filename_hr']]
-    data = np.array([signal for signal, meta in data])
-    return data
+    filenames = df['filename_lr'] if sampling_rate == 100 else df['filename_hr']
+
+    data = []
+    for f in tqdm(filenames, desc="Loading records"):
+        try:
+            signal, _meta = wfdb.rdsamp(path / f)
+        except Exception as e:
+            raise RuntimeError(f"Failed to load record {f}: {e}") from e
+        data.append(signal)
+
+    return np.array(data)
