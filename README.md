@@ -7,13 +7,14 @@ experiment-tracking logic from the `ptbxl` package in `src/`.
 ## Quickstart
 
 ```bash
-uv sync --all-extras   # creates .venv, installs the pinned environment (see uv.lock)
-uv run pytest          # run the test suite
-uv run invoke lab      # launch Jupyter Lab
+uv sync --all-extras       # creates .venv, installs the pinned environment (see uv.lock)
+bash scripts/data_download.sh  # download PTB-XL records100 + metadata into data/raw (~1.8 GB, resumable)
+uv run pytest               # run the test suite
+uv run invoke lab           # launch Jupyter Lab
 ```
 
-See [docs/install.md](docs/install.md) for the full setup guide, including notebook diffing
-(`nbdime`) and Plotly/JupyterLab extension setup.
+See [docs/install.md](docs/install.md) for the full setup guide, including how the data
+download works and notebook diffing (`nbdime`)/Plotly/JupyterLab extension setup.
 
 ## What's implemented
 

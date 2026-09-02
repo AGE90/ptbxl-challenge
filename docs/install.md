@@ -20,13 +20,42 @@ Navigate to your project directory and let `uv` create the virtual environment a
 uv sync --all-extras
 ```
 
-This reads `.python-version` (pinned to 3.11), downloads that interpreter if needed, creates `.venv/`, and installs everything pinned in `uv.lock`. Re-run it any time `pyproject.toml` changes.
+This reads `.python-version` (pinned to 3.12), downloads that interpreter if needed, creates `.venv/`, and installs everything pinned in `uv.lock`. Re-run it any time `pyproject.toml` changes.
 
 `uv run <command>` runs a command inside that environment without needing to `source .venv/bin/activate` first (all examples below use this form). If you prefer an activated shell, `source .venv/bin/activate` still works after `uv sync`.
 
 ---
 
-## 2. Project's Module
+## 2. Download the PTB-XL Data
+
+```bash
+bash scripts/data_download.sh
+```
+
+This fetches PhysioNet's single bulk ZIP for the whole PTB-XL project (~1.8 GB) instead
+of recursively downloading ~44,000 individual record files one at a time — that per-file
+HTTP overhead is what makes the naive `wget -r` approach so slow. Only `records100`
+(100Hz, downsampled) and the two metadata CSVs are extracted; `records500` (500Hz, full
+resolution) is skipped since nothing in this project uses it.
+
+The download is resumable if interrupted (re-run the same command), and the script
+skips straight to done if the data is already present — pass `--force` to re-download
+from scratch. When it finishes, you'll have:
+
+```text
+data/raw/ptbxl_database.csv
+data/raw/scp_statements.csv
+data/raw/physionet.org/files/ptb-xl/1.0.3/records100/
+```
+
+which is exactly what `notebooks/01-AGE-data_exploration.ipynb` and
+`ptbxl.data.make_dataset.load_raw_data` expect. If you'd rather download manually (or
+need `records500` too), see the "Alternative: manual download" note in that notebook's
+"Download the data" cell.
+
+---
+
+## 3. Project's Module
 
 `uv sync` already installs the `ptbxl` package itself in **editable** mode as part of the project's own dependencies, so changes to `src/ptbxl/` are picked up immediately — no separate `pip install -e .` step is needed.
 
@@ -48,7 +77,7 @@ data_dir()
 
 ---
 
-## 3. Set Up Git Diff for Jupyter Notebooks
+## 4. Set Up Git Diff for Jupyter Notebooks
 
 To efficiently manage and track changes in Jupyter notebooks, we recommend using **[nbdime](https://nbdime.readthedocs.io/en/stable/index.html)** for diffing and merging. `nbdime` is already installed as part of `uv sync --all-extras`'s dev tooling; run it via `uv run`.
 
@@ -83,7 +112,7 @@ uv run jupyter lab build
 
 ---
 
-## 4. Set Up Plotly for JupyterLab
+## 5. Set Up Plotly for JupyterLab
 
 Plotly requires some additional steps to work correctly with JupyterLab.
 
@@ -102,7 +131,7 @@ uv run jupyter lab build
 
 ---
 
-## 5. Managing Project Tasks with Invoke
+## 6. Managing Project Tasks with Invoke
 
 We use **[Invoke](http://www.pyinvoke.org/)** as a task runner for common project management tasks. You can view available tasks and manage them from a single entry point. `make lab` / `make notebook` wrap the most common ones (see the project [Makefile](../Makefile)); for anything else, run `invoke` directly via `uv run`.
 

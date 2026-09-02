@@ -1,7 +1,10 @@
-.PHONY: setup test lint format typecheck clean lab notebook run
+.PHONY: setup data test lint format typecheck clean lab notebook run
 
 setup:      ## Sync the environment (creates .venv, installs deps from uv.lock).
 	uv sync --all-extras
+
+data:       ## Download the PTB-XL dataset (records100 + metadata) into data/raw.
+	bash scripts/data_download.sh
 
 test:       ## Run the test suite.
 	uv run pytest
