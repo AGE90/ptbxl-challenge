@@ -3,7 +3,15 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
+from sklearn.feature_selection import (
+    RFE,
+    SelectFromModel,
+    SelectKBest,
+    f_classif,
+    mutual_info_classif,
+)
 from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import StandardScaler
 
@@ -22,11 +30,10 @@ class FeatureSelectionPipeline:
     Runs several sklearn-`SelectorMixin`-compatible feature selectors on one
     feature set and reports a consensus subset.
 
-    Selector choice (which sklearn methods, whether to include a wrapper
-    like `metaheuristics.feature_selection.MetaheuristicSelector`, and what
-    feature budget to use) is left to the caller via the `selectors` dict
-    passed to `run` -- this class only handles imputation, running each
-    selector, scoring, and aggregating agreement/consensus across them.
+    Selector choice (which sklearn methods and what feature budget to use) is
+    left to the caller via the `selectors` dict passed to `run` -- this class
+    only handles imputation, running each selector, scoring, and aggregating
+    agreement/consensus across them.
     """
 
     def __init__(
@@ -40,7 +47,12 @@ class FeatureSelectionPipeline:
     ) -> None:
         self.estimator = estimator
         self.imputer = (
-            imputer if imputer is not None else SimpleImputer(strategy="median")
+            imputer
+            if imputer is not None
+            # keep_empty_features: an all-NaN column (e.g. a wave-spectral
+            # feature with 0 detected beats) would otherwise be silently
+            # dropped by sklearn, breaking impute()'s same-shape guarantee.
+            else SimpleImputer(strategy="median", keep_empty_features=True)
         )
         # Coefficient-/importance-based selectors (RFE, SelectFromModel) are
         # scale-sensitive: a feature with larger raw magnitude (e.g. wavelet
@@ -119,6 +131,24 @@ class FeatureSelectionPipeline:
         """Features voted for by >= `consensus_threshold` fraction of `n_methods`."""
         threshold = self.consensus_threshold * n_methods
         return [str(f) for f in votes[votes >= threshold].index]
+
+
+def build_selectors(k: int, random_state: int) -> dict[str, BaseEstimator]:
+    """The 4 lightweight sklearn selectors, all budgeted to `k` features."""
+    return {
+        "anova_f": SelectKBest(f_classif, k=k),
+        "mutual_info": SelectKBest(mutual_info_classif, k=k),
+        "select_from_model": SelectFromModel(
+            LogisticRegression(max_iter=1000, random_state=random_state),
+            max_features=k,
+            threshold=-np.inf,
+        ),
+        "rfe": RFE(
+            LogisticRegression(max_iter=1000, random_state=random_state),
+            n_features_to_select=k,
+            step=0.2,
+        ),
+    }
 
 
 def _jaccard_matrix(masks: dict[str, np.ndarray]) -> pd.DataFrame:

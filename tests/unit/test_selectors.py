@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
 from sklearn.linear_model import LogisticRegression
 
-from ptbxl.features.feature_selection import FeatureSelectionPipeline
+from ptbxl.selection.selectors import FeatureSelectionPipeline
 
 pipeline = FeatureSelectionPipeline(
     estimator=LogisticRegression(), cv=3, scoring="accuracy"

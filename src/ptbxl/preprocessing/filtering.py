@@ -1,0 +1,231 @@
+import numpy as np
+from scipy import ndimage, signal
+
+
+def mean_removal(ecg: np.ndarray, axis: int = 1) -> np.ndarray:
+    """Mean removal
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+    axis : int, optional
+        Axis along which the mean is computed
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiograms array
+    """
+
+    return ecg - np.mean(ecg, axis=axis, keepdims=True)
+
+
+def wander_removal(
+    ecg: np.ndarray,
+    fs: float,
+    fc: float = 0.5,
+    order: int = 4,
+    axis: int = 1,
+) -> np.ndarray:
+    """Wander removal
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+       Electrocardiograms array
+    fs : float
+        Sampling frequency (Hz)
+    fc : float, optional
+        Cutoff frequency, by default 0.5 Hz
+    order : int, optional
+        High-pass butterworth filter order, by default 4
+    axis : int, optional
+        Axis along which the filtering is applyed
+
+    Returns
+    -------
+    np.ndarray
+         Filtered electrocardiograms array
+    """
+
+    if order % 2 != 0:
+        raise ValueError(
+            f"order must be even (filtfilt doubles the effective order); got {order}"
+        )
+
+    # Define the high-pass filter
+    b, a = signal.butter(order / 2, fc / (fs / 2), "highpass")
+
+    # Apply the filter to remove baseline wander
+    filtered_ecg = signal.filtfilt(b, a, ecg, axis=axis)
+
+    return filtered_ecg
+
+
+def band_pass_filtering(
+    ecg: np.ndarray,
+    fs: float,
+    fc_low: float = 5,
+    fc_high: float = 12,
+    order: int = 4,
+    axis: int = 1,
+) -> np.ndarray:
+    """Band-pass
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+    fs : float
+        Sampling frequency (Hz)
+    fc_low : float, optional
+        Cutoff frequency for the low pass, by default 5 Hz
+    fc_high : float, optional
+        Cutoff frequency for the high pass, by default 12 Hz
+    order : int, optional
+        Band-pass butterworth filter order, by default 4, by default 4
+    axis : int, optional
+        Axis along which the filtering is applyed
+
+    Returns
+    -------
+    np.ndarray
+        Filtered electrocardiograms array
+    """
+
+    if order % 2 != 0:
+        raise ValueError(
+            f"order must be even (filtfilt doubles the effective order); got {order}"
+        )
+
+    b, a = signal.butter(order / 2, [fc_low / (fs / 2), fc_high / (fs / 2)], "bandpass")
+    ecg = signal.filtfilt(b, a, ecg, axis=axis)
+
+    return ecg
+
+
+def derivative_filtering(ecg: np.ndarray, axis: int = 1) -> np.ndarray:
+    """Compute the first derivative
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+    axis : int, optional
+        Axis along which the derivative filtering is applyed
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiogram array
+    """
+
+    return np.gradient(ecg, axis=axis)
+
+
+def squaring(ecg: np.ndarray) -> np.ndarray:
+    """Square the signal
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiogram array
+    """
+
+    return np.square(ecg)
+
+
+def smooth_signals(ecg: np.ndarray, w: int, axis: int = 1) -> np.ndarray:
+    """Apply moving-average to smooth the signal
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+    w : int
+        Moving average window size
+    axis : int, optional
+        Axis along which the smoothing is applied, by default 1
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiogram array
+    """
+
+    return ndimage.uniform_filter1d(ecg, size=w, axis=axis, mode="nearest")
+
+
+def pan_tompkins(
+    ecg: np.ndarray,
+    fs: float,
+    w: int,
+    fc_low: float = 5,
+    fc_high: float = 12,
+    order: int = 4,
+    axis: int = 1,
+) -> np.ndarray:
+    """Pan-Tompkins algorithm
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+       Electrocardiograms array
+    fs : float
+        Sampling frequency (Hz)
+    w : int
+        Moving average window size
+    fc_low : float, optional
+        Band-pass low cutoff frequency, by default 5 Hz
+    fc_high : float, optional
+        Band-pass high cutoff frequency, by default 12 Hz
+    order : int, optional
+        Band-pass butterworth filter order, by default 4
+    axis : int, optional
+        Axis along which each step is applied, by default 1
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiogram array
+    """
+
+    ecg = band_pass_filtering(
+        ecg=ecg, fs=fs, fc_low=fc_low, fc_high=fc_high, order=order, axis=axis
+    )
+    ecg = derivative_filtering(ecg=ecg, axis=axis)
+    ecg = squaring(ecg=ecg)
+    ecg = smooth_signals(ecg=ecg, w=w, axis=axis)
+
+    return ecg
+
+
+def normalize(ecg: np.ndarray, axis: int = 1) -> np.ndarray:
+    """Normalize signals between [-1, 1]
+
+    Parameters
+    ----------
+    ecg : np.ndarray
+        Electrocardiograms array
+
+    Returns
+    -------
+    np.ndarray
+        Transformed electrocardiogram array
+    """
+
+    lo = np.min(ecg, axis=axis, keepdims=True)
+    hi = np.max(ecg, axis=axis, keepdims=True)
+    span = hi - lo
+
+    out = np.ones(ecg.shape)
+    ecg = np.divide(ecg - lo, span, out=out, where=span != 0)
+    ecg = 2 * ecg - 1
+
+    return ecg

@@ -41,14 +41,34 @@
 ├── src
 │   └── ptbxl  <- Source code for use in this project.
 │       ├── __init__.py    <- Makes ptbxl a Python module.
-│       ├── data           <- Scripts to download or generate data.
-│       │   └── make_dataset.py
-│       ├── features       <- Scripts to turn raw data into features for modeling.
-│       │   └── build_features.py
-│       ├── models         <- Scripts to train models and then use trained models to make predictions.
-│       │   ├── predict_model.py
-│       │   └── train_model.py
-│       ├── utils          <- Scripts to help with common tasks.
+│       ├── config.py      <- Typed config dataclasses + YAML loader for pipeline stages.
+│       ├── data            <- Dataset loading, validation, and train/val/test splitting.
+│       │   ├── ingestion.py
+│       │   ├── validation.py
+│       │   └── splitting.py
+│       ├── preprocessing   <- Signal filtering + config-driven preprocessing stages.
+│       │   ├── filtering.py
+│       │   └── pipeline.py
+│       ├── features        <- Feature extractors, grouped by domain, plus composition.
+│       │   ├── spectral.py
+│       │   ├── temporal.py
+│       │   ├── wavelet.py
+│       │   └── extraction.py
+│       ├── selection       <- Consensus feature selection.
+│       │   ├── selectors.py
+│       │   └── selection.py
+│       ├── modeling         <- Model factory, training/optimization, prediction, MLflow tracking.
+│       │   ├── models.py
+│       │   ├── optimize.py
+│       │   ├── predict.py
+│       │   └── tracking.py
+│       ├── evaluation       <- Metric computation and evaluation entrypoint.
+│       │   ├── metrics.py
+│       │   └── evaluation.py
+│       ├── pipelines        <- Composes the stages above into runnable pipelines.
+│       │   ├── feature_engineering.py
+│       │   └── training.py
+│       ├── utils           <- Scripts to help with common tasks.
 │       │   └── paths.py   <- Helper functions for relative file referencing across project.
 │       └── visualization  <- Scripts to create exploratory and results oriented visualizations.
 │           └── visualize.py

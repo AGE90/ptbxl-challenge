@@ -35,6 +35,7 @@ dependencies = [
     "ipykernel",
     "xgboost",
     "neurokit2>=0.2.12",
+    "pyyaml",
 ]
 
 [project.optional-dependencies]

@@ -18,23 +18,32 @@ download works and notebook diffing (`nbdime`)/Plotly/JupyterLab extension setup
 
 ## What's implemented
 
-- **`SignalPreprocessing`** (`src/ptbxl/data/signal_preprocessing.py`) — mean removal, baseline
-  wander removal, band-pass filtering, a Pan-Tompkins pipeline, and min-max normalization for
-  `(records, samples, leads)` ECG arrays.
-- **`BuildFeatures`** (`src/ptbxl/features/build_features.py`) — power spectral density,
-  dominant frequency, spectral entropy, and wavelet-based features.
-- **`ExperimentTracking`** (`src/ptbxl/models/tracking.py`) — MLflow-backed experiment tracking
-  (SQLite store + local artifact directory under `tracking/`), logging params, metrics, a
-  confusion matrix, and the trained model itself.
-- **`src/ptbxl/data/make_dataset.py`** — loads raw PTB-XL waveform records via `wfdb`.
-- **`src/ptbxl/utils/paths.py`** — project-root-relative path helpers (`data_dir()`,
-  `tracking_dir()`, etc.), so nothing hardcodes paths relative to the current working directory.
+The `ptbxl` package separates framework-agnostic ML core logic (grouped by pipeline stage)
+from the one MLOps-specific adapter (MLflow), composed by a thin `pipelines/` layer:
+
+- **`data/`** — dataset loading (`ingestion.py`, wraps `wfdb`), validation (`validation.py`),
+  and PTB-XL's own `strat_fold`-based train/val/test split (`splitting.py`).
+- **`preprocessing/`** — mean removal, baseline wander removal, band-pass filtering, a
+  Pan-Tompkins pipeline, and min-max normalization (`filtering.py`), composed into config-driven
+  stages in `pipeline.py`.
+- **`features/`** — power spectral density, dominant frequency, spectral entropy, and
+  per-wave (P/QRS/T) spectral descriptors (`spectral.py`); time-domain and heart-rate features
+  (`temporal.py`); wavelet decomposition features (`wavelet.py`); composed in `extraction.py`.
+- **`selection/`** — sklearn-based consensus feature selection (`selectors.py`, `selection.py`).
+- **`modeling/`** — a config-driven model factory (`models.py`), training/hyperparameter search
+  (`optimize.py`), prediction wrappers (`predict.py`), and MLflow-backed experiment tracking
+  (`tracking.py` — SQLite store + local artifact directory under `tracking/`).
+- **`evaluation/`** — pure classification-metric computation (`metrics.py`) and an `evaluate()`
+  entrypoint (`evaluation.py`).
+- **`pipelines/`** — composes the above into `feature_engineering_pipeline(config)` and
+  `training_pipeline(config)`, driven by `config/dev.yml` / `config/prod.yml`.
+- **`utils/paths.py`** — project-root-relative path helpers (`data_dir()`, `tracking_dir()`,
+  etc.), so nothing hardcodes paths relative to the current working directory.
 
 ## What's still a stub
 
-`src/ptbxl/models/train_model.py`, `src/ptbxl/models/predict_model.py`,
-`src/ptbxl/visualization/visualize.py`, and `app/main.py` are currently empty — the actual
-training/prediction pipeline and app entry point haven't been built yet.
+`src/ptbxl/visualization/visualize.py` and `app/main.py` are currently empty — the actual
+app entry point hasn't been built yet.
 
 ## Project organization
 

@@ -1,0 +1,27 @@
+data:
+  sampling_rate: 100
+  trim_seconds: 1.0
+
+preprocessing:
+  lowcut: 5.0
+  highcut: 12.0
+  filter_order: 4
+  window_ms: 150
+
+features:
+  spectral: true
+  temporal: true
+  wavelet: true
+
+selection:
+  method: consensus
+  max_features: 10
+  sample_size: 2000
+
+training:
+  model: xgboost
+  random_state: 42
+
+optimization:
+  n_trials: 20
+  metric: roc_auc

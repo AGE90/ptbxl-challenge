@@ -9,10 +9,10 @@ import numpy as np
 import seaborn as sns
 from mlflow.models.signature import infer_signature
 from sklearn.base import BaseEstimator
-from sklearn.metrics import (ConfusionMatrixDisplay,
-                             f1_score, precision_score, recall_score,
-                             roc_auc_score)
+from sklearn.metrics import ConfusionMatrixDisplay
 
+from ptbxl.evaluation.metrics import compute_classification_metrics
+from ptbxl.modeling.predict import predict, predict_proba
 from ptbxl.utils.paths import tracking_dir
 
 logger = logging.getLogger(__name__)
@@ -52,10 +52,7 @@ def log_confusion_matrix(y_test, y_pred, labels):
 
     # Create confusion matrix plot
     cm_display = ConfusionMatrixDisplay.from_predictions(
-        y_test,
-        y_pred,
-        display_labels=labels,
-        cmap="Blues"
+        y_test, y_pred, display_labels=labels, cmap="Blues"
     )
 
     # Log the figure directly - no temp file or in-memory buffer needed
@@ -66,8 +63,8 @@ def log_confusion_matrix(y_test, y_pred, labels):
 
 class ExperimentTracking:
     """
-    This class provides methods for tracking and logging experiment details, including model 
-    performance and artifacts.
+    This class provides methods for tracking and logging experiment details,
+    including model performance and artifacts.
     """
 
     def __init__(self):
@@ -112,7 +109,7 @@ class ExperimentTracking:
         X_test: np.ndarray,
         y_test: np.ndarray,
         labels: list,
-        xgb: bool = False
+        xgb: bool = False,
     ):
         """
         Tracks an experiment in MLflow by logging parameters, metrics, and artifacts.
@@ -140,34 +137,15 @@ class ExperimentTracking:
         """
 
         # Predict and evaluate
-        y_pred = model.predict(X_test)
-        if hasattr(model, "predict_proba"):
-            y_proba = model.predict_proba(X_test)
-        else:
-            y_proba = None
+        y_pred = predict(model, X_test)
+        y_proba = predict_proba(model, X_test)
+        metrics = compute_classification_metrics(y_test, y_pred, y_proba)
 
-        # Metrics
-        precision = np.round(precision_score(
-            y_test, y_pred, average="weighted"), 2)
-        recall = np.round(recall_score(
-            y_test, y_pred, average="weighted"), 2)
-        f1 = np.round(f1_score(y_test, y_pred, average="weighted"), 2)
-        if y_proba is not None and len(np.unique(y_test)) > 2:
-            roc_auc = np.round(roc_auc_score(
-                y_test, y_proba, multi_class="ovr"), 2)
-        elif y_proba is not None:
-            roc_auc = np.round(roc_auc_score(y_test, y_proba[:, 1]), 2)
-        else:
-            roc_auc = None
-
-        logger.info("Precision: %s", precision)
-        logger.info("Recall: %s", recall)
-        logger.info("F1: %s", f1)
-        if roc_auc is not None:
-            logger.info("ROC AUC: %s", roc_auc)
+        for name, value in metrics.items():
+            logger.info("%s: %s", name.replace("_", " ").title(), value)
 
         # Model signature
-        signature = infer_signature(X_train, model.predict(X_train))
+        signature = infer_signature(X_train, predict(model, X_train))
 
         try:
             # Temporarily change working directory
@@ -178,8 +156,7 @@ class ExperimentTracking:
                 if experiment is None:
                     # Create experiment with explicit artifact location
                     mlflow.create_experiment(
-                        name=experiment_name,
-                        artifact_location=self.artifacts_location
+                        name=experiment_name, artifact_location=self.artifacts_location
                     )
 
                 # Set experiment
@@ -195,11 +172,8 @@ class ExperimentTracking:
                         mlflow.log_params(model.get_params())
 
                     # Log metrics
-                    mlflow.log_metric("precision", precision)
-                    mlflow.log_metric("recall", recall)
-                    mlflow.log_metric("f1", f1)
-                    if roc_auc is not None:
-                        mlflow.log_metric("roc_auc", roc_auc)
+                    for name, value in metrics.items():
+                        mlflow.log_metric(name, value)
 
                     # Log confusion matrix directly
                     log_confusion_matrix(y_test, y_pred, labels=labels)
@@ -210,7 +184,7 @@ class ExperimentTracking:
                             model,
                             artifact_path=f"model_{model_name}",
                             signature=signature,
-                            model_format="pkl"
+                            model_format="pkl",
                         )
                     else:
                         mlflow.sklearn.log_model(
@@ -220,5 +194,4 @@ class ExperimentTracking:
                         )
 
         except Exception as e:
-            logger.exception(
-                "An error occurred during experiment tracking %s", e)
+            logger.exception("An error occurred during experiment tracking %s", e)

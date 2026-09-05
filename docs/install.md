@@ -49,7 +49,7 @@ data/raw/physionet.org/files/ptb-xl/1.0.3/records100/
 ```
 
 which is exactly what `notebooks/01-AGE-data_exploration.ipynb` and
-`ptbxl.data.make_dataset.load_raw_data` expect. If you'd rather download manually (or
+`ptbxl.data.ingestion.load_signals` expect. If you'd rather download manually (or
 need `records500` too), see the "Alternative: manual download" note in that notebook's
 "Download the data" cell.
 
