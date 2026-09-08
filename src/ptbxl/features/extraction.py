@@ -51,13 +51,13 @@ def extract_features(
     Parameters
     ----------
     signal : np.ndarray
-        Preprocessed ECG signal (e.g. `preprocessing.pipeline.preprocess_ecg` output).
+        Preprocessed ECG signal (e.g. `preprocessing.stages.preprocess_ecg` output).
     fs : float
         Sampling frequency of the signal in Hz.
     config : FeaturesConfig
         Toggles which feature groups to compute.
     qrs_envelope : np.ndarray, optional
-        Pan-Tompkins envelope of `signal` (e.g. `preprocessing.pipeline.
+        Pan-Tompkins envelope of `signal` (e.g. `preprocessing.stages.
         derive_qrs_envelope` output), required when `config.temporal` is set
         (used for heart-rate features).
     lead_idx : int, optional

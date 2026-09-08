@@ -48,7 +48,7 @@
 │       │   └── splitting.py
 │       ├── preprocessing   <- Signal filtering + config-driven preprocessing stages.
 │       │   ├── filtering.py
-│       │   └── pipeline.py
+│       │   └── stages.py
 │       ├── features        <- Feature extractors, grouped by domain, plus composition.
 │       │   ├── spectral.py
 │       │   ├── temporal.py

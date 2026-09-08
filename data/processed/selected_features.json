@@ -77,6 +77,7 @@
     "l2dom_V3",
     "l2dom_V6",
     "l3nrg_I",
+    "l3nrg_II",
     "l3nrg_III",
     "l3nrg_aVR",
     "l3nrg_V2",
@@ -100,6 +101,7 @@
     "l3skew_V5",
     "l3kurt_II",
     "l3kurt_III",
+    "l3kurt_aVR",
     "l3kurt_V1",
     "l3kurt_V4",
     "l3kurt_V5",
@@ -118,7 +120,6 @@
     "l3dom_V6",
     "l4nrg_V1",
     "l4nrg_V2",
-    "l4nrg_V4",
     "l4nrg_V5",
     "l4nrg_V6",
     "l4mean_V3",
@@ -191,7 +192,6 @@
     "l5dom_II",
     "l5dom_aVF",
     "l5dom_V3",
-    "l5dom_V4",
     "l5dom_V6"
   ],
   "time_domain": [

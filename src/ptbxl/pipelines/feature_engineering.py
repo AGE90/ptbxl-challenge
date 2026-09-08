@@ -6,7 +6,7 @@ from ptbxl.config import Config
 from ptbxl.data.ingestion import DEMOGRAPHIC_COLUMNS, load_dataset
 from ptbxl.data.validation import validate_dataset
 from ptbxl.features.extraction import extract_features
-from ptbxl.preprocessing.pipeline import derive_qrs_envelope, preprocess_ecg
+from ptbxl.preprocessing.stages import derive_qrs_envelope, preprocess_ecg
 from ptbxl.selection.selection import select_features
 
 

@@ -25,7 +25,7 @@ from the one MLOps-specific adapter (MLflow), composed by a thin `pipelines/` la
   and PTB-XL's own `strat_fold`-based train/val/test split (`splitting.py`).
 - **`preprocessing/`** — mean removal, baseline wander removal, band-pass filtering, a
   Pan-Tompkins pipeline, and min-max normalization (`filtering.py`), composed into config-driven
-  stages in `pipeline.py`.
+  stages in `stages.py`.
 - **`features/`** — power spectral density, dominant frequency, spectral entropy, and
   per-wave (P/QRS/T) spectral descriptors (`spectral.py`); time-domain and heart-rate features
   (`temporal.py`); wavelet decomposition features (`wavelet.py`); composed in `extraction.py`.
