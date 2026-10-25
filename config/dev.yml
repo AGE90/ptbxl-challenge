@@ -17,6 +17,10 @@ selection:
   method: consensus
   max_features: 10
   sample_size: 2000
+  # Options: anova_f, mutual_info, select_from_model, rfe, relief, relieff,
+  # multisurf, extra_trees, pso (needs the `metaheuristics` extra).
+  # Relief-family is O(n^2): slow without a sample_size.
+  methods: [anova_f, mutual_info, select_from_model, rfe]
 
 training:
   model: xgboost

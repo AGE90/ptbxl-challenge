@@ -32,6 +32,10 @@ class SelectionConfig:
     method: str = "consensus"
     max_features: int = 10
     sample_size: int | None = 2000
+    # Names from `ptbxl.selection.selectors.SELECTORS`.
+    methods: list[str] = field(
+        default_factory=lambda: ["anova_f", "mutual_info", "select_from_model", "rfe"]
+    )
 
 
 @dataclass

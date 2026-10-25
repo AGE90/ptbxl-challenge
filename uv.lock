@@ -2506,6 +2506,7 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "skrebate" },
     { name = "tqdm" },
     { name = "wfdb" },
     { name = "xgboost" },
@@ -2545,6 +2546,7 @@ requires-dist = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "seaborn" },
+    { name = "skrebate", specifier = ">=0.8.4" },
     { name = "tqdm" },
     { name = "wfdb" },
     { name = "xgboost" },
@@ -3204,6 +3206,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c8/9f/46448c4e41a4c5ee4bdb74b3758af48e5ff0faeffe40f4e301bfc7594894/skops-0.14.0.tar.gz", hash = "sha256:6c8c0e047f691a3a582c3258943eecafcbfd79c8c7eef66260f3703e363254f0", size = 608084, upload-time = "2026-04-20T18:23:55.336Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e7/0e/3ae19fa941522cd98e119762e7181d371c8dba0b2d72bfaf9522692e329c/skops-0.14.0-py3-none-any.whl", hash = "sha256:60a5db78a9db46ccee2139a0ba13ab5afb1c96f4749b382e75a371291bbe3e36", size = 132198, upload-time = "2026-04-20T18:23:54.018Z" },
+]
+
+[[package]]
+name = "skrebate"
+version = "0.8.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "joblib" },
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/80/42/e5f04c65d092150d43ac042bf017062f8378f4af1af7da28fdab67135629/skrebate-0.8.4.tar.gz", hash = "sha256:4b590dfbc64ab5f6d6b215a07a472a7e8f8990f395f37bde33fe171b852b449b", size = 45914, upload-time = "2026-09-12T01:28:27.454Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d7/26/581818621c63d61a556ab2d615893fe4827994482857191b5b9588a033fc/skrebate-0.8.4-py3-none-any.whl", hash = "sha256:eb11e157ba60420fd615a3759ac9356504f90ef86e01ec846f2518c5aff45575", size = 55356, upload-time = "2026-09-12T01:28:26.159Z" },
 ]
 
 [[package]]

@@ -13,6 +13,7 @@ def test_load_config_round_trips_values(tmp_path: Path):
     selection:
       max_features: 5
       sample_size: null
+      methods: [relief, anova_f]
     training:
       model: logistic_regression
     optimization:
@@ -29,6 +30,7 @@ def test_load_config_round_trips_values(tmp_path: Path):
     assert config.preprocessing.highcut == 40.0
     assert config.selection.max_features == 5
     assert config.selection.sample_size is None
+    assert config.selection.methods == ["relief", "anova_f"]
     assert config.training.model == "logistic_regression"
     assert config.optimization.n_trials == 7
     assert config.optimization.metric == "f1"

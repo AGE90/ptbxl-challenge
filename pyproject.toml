@@ -36,6 +36,7 @@ dependencies = [
     "xgboost",
     "neurokit2>=0.2.12",
     "pyyaml",
+    "skrebate>=0.8.4",
 ]
 
 [project.optional-dependencies]

@@ -1,11 +1,7 @@
 """Config-driven feature selection (see notebook 04's `select_domain_features`).
 
-Note: the notebook's PSO-based `metaheuristics.feature_selection.MetaheuristicSelector`
-is intentionally not wired in here -- it's an optional git-sourced dependency; adding it
-to this pipeline would force every caller of `select_features` to have that extra
-installed. It remains available for ad hoc use in the notebook. `config.max_features`
-takes over the role the notebook filled by deriving a budget from the PSO selector's
-support size.
+`config.methods` picks selectors by name from `selectors.SELECTORS`. "pso" needs the
+optional `metaheuristics` extra installed; it is imported only when requested.
 """
 
 import pandas as pd
@@ -21,7 +17,7 @@ _RANDOM_STATE = 42
 def select_features(
     X: pd.DataFrame, y: pd.Series, config: SelectionConfig
 ) -> list[str]:
-    """Consensus of anova_f/mutual_info/model/rfe selectors, budgeted to `max_features`.
+    """Consensus of the `config.methods` selectors, budgeted to `max_features`.
 
     Subsamples to `config.sample_size` (stratified) first if set, matching
     notebook 04's `SELECTION_SAMPLE_SIZE` behavior.
@@ -43,7 +39,7 @@ def select_features(
         cv=3,
         scoring="roc_auc",
     )
-    selectors = build_selectors(config.max_features, _RANDOM_STATE)
+    selectors = build_selectors(config.max_features, _RANDOM_STATE, config.methods)
 
     _, votes, _ = pipeline.run(X, y, selectors)
     return pipeline.consensus_features(votes, len(selectors))

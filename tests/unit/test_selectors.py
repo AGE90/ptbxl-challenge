@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest, VarianceThreshold, f_classif
+import pytest
 from sklearn.linear_model import LogisticRegression
 
-from ptbxl.selection.selectors import FeatureSelectionPipeline
+from ptbxl.selection.selectors import FeatureSelectionPipeline, build_selectors
 
 pipeline = FeatureSelectionPipeline(
     estimator=LogisticRegression(), cv=3, scoring="accuracy"
@@ -78,3 +79,19 @@ def test_consensus_features_applies_threshold():
     consensus = pipeline.consensus_features(votes, n_methods=4)
 
     assert consensus == ["a"]
+
+
+def test_build_selectors_by_name_finds_informative_feature():
+    X, y = _sample_data()
+    methods = ["anova_f", "relief", "relieff", "multisurf", "extra_trees"]
+
+    results, _, _ = pipeline.run(X, y, build_selectors(2, 0, methods))
+
+    assert [r.method for r in results] == methods
+    for result in results:
+        assert "f0" in result.selected_features, result.method
+
+
+def test_build_selectors_rejects_unknown_method():
+    with pytest.raises(ValueError, match="nope"):
+        build_selectors(2, 0, ["nope"])
